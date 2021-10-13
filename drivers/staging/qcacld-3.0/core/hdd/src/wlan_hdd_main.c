@@ -361,6 +361,7 @@ static const struct category_info cinfo[MAX_SUPPORTED_CATEGORY] = {
 	[QDF_MODULE_ID_PKT_CAPTURE] = {QDF_TRACE_LEVEL_ALL},
 	[QDF_MODULE_ID_FTM_TIME_SYNC] = {QDF_TRACE_LEVEL_ALL},
 	[QDF_MODULE_ID_CFR] = {QDF_TRACE_LEVEL_ALL},
+	[QDF_MODULE_ID_GPIO] = {QDF_TRACE_LEVEL_ALL},
 };
 
 struct notifier_block hdd_netdev_notifier;
@@ -11696,10 +11697,6 @@ struct hdd_context *hdd_context_create(struct device *dev)
 	}
 
 	status = cfg_parse(WLAN_INI_FILE);
-	if (!QDF_IS_STATUS_ERROR(status))
-		goto cfg_exit;
-
-	status = cfg_parse(WLAN_INI_FILE_DEFAULT);
 	if (QDF_IS_STATUS_ERROR(status)) {
 		hdd_err("Failed to parse cfg %s; status:%d\n",
 			WLAN_INI_FILE, status);
@@ -11707,7 +11704,6 @@ struct hdd_context *hdd_context_create(struct device *dev)
 		goto err_free_config;
 	}
 
-cfg_exit:
 	ret = hdd_objmgr_create_and_store_psoc(hdd_ctx, DEFAULT_PSOC_ID);
 	if (ret) {
 		QDF_DEBUG_PANIC("Psoc creation fails!");
@@ -15354,6 +15350,9 @@ static void hdd_set_adapter_wlm_def_level(struct hdd_context *hdd_ctx)
 	struct hdd_adapter *adapter, *next_adapter = NULL;
 	wlan_net_dev_ref_dbgid dbgid = NET_DEV_HOLD_GET_ADAPTER;
 	int ret;
+
+	if (QDF_GLOBAL_FTM_MODE == hdd_get_conparam())
+		return;
 
 	ret = wlan_hdd_validate_context(hdd_ctx);
 	if (ret != 0)
